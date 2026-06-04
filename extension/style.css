@@ -394,8 +394,9 @@ header {
 
 /* ---- Mission Cards ---- */
 .missions {
-  columns: 280px;
-  column-gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
   margin-bottom: 28px;
 }
 
@@ -413,8 +414,6 @@ header {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  break-inside: avoid;       /* don't split a card across columns */
-  margin-bottom: 12px;       /* vertical spacing (replaces grid gap) */
 }
 
 /* Colored top border instead of side bar for grid cards */
