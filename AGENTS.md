@@ -17,7 +17,7 @@ Before doing anything technical, tell the user what they're about to get:
 > - **Duplicate detection** flags when you have the same page open twice
 > - **Click any tab title to jump to it** even across different Chrome windows
 > - **Save for later** bookmark individual tabs to a checklist before closing them
-> - **100% local** no server, no accounts, no data sent anywhere
+> - **Local-first** no server or accounts; saved tabs and shortcuts stay in Chrome storage
 >
 > It's just a Chrome extension. Setup takes about 1 minute.
 
@@ -26,7 +26,7 @@ Before doing anything technical, tell the user what they're about to get:
 ## Step 1 -- Clone the repo
 
 ```bash
-git clone https://github.com/zarazhangrui/tab-out.git
+git clone https://github.com/PatrickTangwen/tab-out.git
 cd tab-out
 ```
 
@@ -92,5 +92,5 @@ Once the extension is loaded:
 
 - Tab Out is a pure Chrome extension. No server, no Node.js, no npm.
 - Saved tabs are stored in `chrome.storage.local` (persists across sessions).
-- 100% local. No data is sent to any external service.
+- Local-first. Saved tabs and shortcuts stay in `chrome.storage.local`.
 - To update: `cd tab-out && git pull`, then reload the extension in `chrome://extensions`.

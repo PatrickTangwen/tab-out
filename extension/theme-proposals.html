@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tab Out Theme Proposals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --page-bg: #141826;
+      --page-ink: #e4e8f7;
+      --page-muted: #9ca7bf;
+      --panel-bg: rgba(19, 24, 38, 0.72);
+      --panel-line: rgba(158, 175, 218, 0.2);
+      --panel-soft: rgba(255, 255, 255, 0.06);
+      --accent-a: #8fb8ff;
+      --accent-b: #8ee6d8;
+      --accent-c: #f3b38d;
+      --danger: #f38ba8;
+      --shadow: rgba(3, 8, 20, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", sans-serif;
+      color: var(--page-ink);
+      background: var(--page-bg);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(115deg, rgba(255, 255, 255, 0.06), transparent 32%),
+        linear-gradient(250deg, rgba(255, 255, 255, 0.04), transparent 36%);
+      pointer-events: none;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 34px 32px 56px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 26px;
+    }
+
+    .title h1 {
+      margin: 0 0 4px;
+      font-family: "Newsreader", serif;
+      font-size: 34px;
+      font-weight: 300;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--page-muted);
+      font-size: 14px;
+    }
+
+    .theme-meta {
+      min-width: 270px;
+      padding: 14px 16px;
+      border: 1px solid var(--panel-line);
+      border-radius: 8px;
+      background: var(--panel-bg);
+      box-shadow: 0 14px 42px var(--shadow);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+
+    .theme-meta-label {
+      color: var(--page-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .theme-meta-name {
+      font-family: "Newsreader", serif;
+      font-size: 22px;
+      font-weight: 400;
+      margin-bottom: 3px;
+    }
+
+    .theme-meta-note {
+      color: var(--page-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .preview {
+      min-height: 610px;
+      border: 1px solid var(--panel-line);
+      border-radius: 10px;
+      background: var(--panel-bg);
+      box-shadow: 0 20px 70px var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+    }
+
+    .mock {
+      padding: 28px 34px 42px;
+    }
+
+    .mock-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--panel-line);
+      margin-bottom: 18px;
+    }
+
+    .mock-greeting {
+      min-width: 0;
+    }
+
+    .mock-greeting h2 {
+      margin: 0 0 4px;
+      font-family: "Newsreader", serif;
+      font-size: 28px;
+      font-weight: 300;
+      letter-spacing: 0;
+    }
+
+    .mock-date {
+      color: var(--page-muted);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .mock-search {
+      width: min(420px, 42vw);
+      min-width: 260px;
+      height: 44px;
+      border: 1px solid color-mix(in srgb, var(--accent-a) 34%, transparent);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 8px 0 15px;
+      color: var(--page-muted);
+    }
+
+    .mock-search svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .mock-search span {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .mock-search button {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--accent-a);
+      background: color-mix(in srgb, var(--accent-a) 18%, transparent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-row {
+      min-height: 86px;
+      display: flex;
+      align-items: flex-start;
+      gap: 22px;
+      margin-bottom: 16px;
+    }
+
+    .shortcut {
+      width: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--page-muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .shortcut-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 1px solid color-mix(in srgb, var(--accent-a) 24%, transparent);
+      background: var(--panel-soft);
+      box-shadow: 0 10px 24px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-a);
+      font-weight: 700;
+    }
+
+    .shortcut-icon img {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+    }
+
+    .shortcut.add .shortcut-icon {
+      border-style: dashed;
+      font-size: 24px;
+      font-weight: 400;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-header h3 {
+      margin: 0;
+      font-family: "Newsreader", serif;
+      font-size: 18px;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--page-muted);
+      white-space: nowrap;
+    }
+
+    .section-line {
+      height: 1px;
+      flex: 1;
+      background: var(--panel-line);
+    }
+
+    .section-count {
+      color: var(--page-muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .mini-btn {
+      border: 1px solid color-mix(in srgb, var(--accent-c) 46%, transparent);
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--accent-c) 12%, transparent);
+      color: var(--accent-c);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .tab-card {
+      min-height: 128px;
+      border: 1px solid var(--panel-line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--panel-bg) 78%, transparent);
+      box-shadow: 0 10px 34px color-mix(in srgb, var(--shadow) 70%, transparent);
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      background: var(--accent-c);
+      opacity: 0.86;
+    }
+
+    .tab-card:nth-child(2)::before {
+      background: var(--accent-a);
+    }
+
+    .tab-card:nth-child(3)::before {
+      background: var(--accent-b);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .badge {
+      color: var(--accent-c);
+      background: color-mix(in srgb, var(--accent-c) 14%, transparent);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--page-ink);
+      font-size: 13px;
+      margin-bottom: 14px;
+      opacity: 0.88;
+    }
+
+    .favicon-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: var(--accent-a);
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .theme-card {
+      border: 1px solid var(--panel-line);
+      border-radius: 8px;
+      background: var(--panel-bg);
+      color: var(--page-ink);
+      text-align: left;
+      cursor: pointer;
+      padding: 14px;
+      box-shadow: 0 10px 34px color-mix(in srgb, var(--shadow) 70%, transparent);
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .theme-card:hover,
+    .theme-card.active {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--accent-a) 56%, transparent);
+    }
+
+    .theme-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .theme-card-name {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .theme-kind {
+      color: var(--page-muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .swatches {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 9px;
+    }
+
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .theme-card p {
+      color: var(--page-muted);
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.42;
+    }
+
+    .token-panel {
+      margin-top: 4px;
+      border: 1px solid var(--panel-line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--panel-bg) 72%, transparent);
+      padding: 12px 14px;
+      color: var(--page-muted);
+      font-size: 11px;
+      line-height: 1.6;
+      overflow: auto;
+    }
+
+    @media (max-width: 1060px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side {
+        grid-row: 1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        padding: 24px 18px 40px;
+      }
+
+      .topbar,
+      .mock-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .mock-search {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .cards,
+      .side {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="title">
+        <h1>Theme proposals</h1>
+        <p>Click a theme to preview the same Tab Out surface with lighter glass, cleaner contrast, and softer color.</p>
+      </div>
+      <div class="theme-meta">
+        <div class="theme-meta-label">Selected theme</div>
+        <div class="theme-meta-name" id="selectedName"></div>
+        <div class="theme-meta-note" id="selectedNote"></div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <section class="preview" aria-label="Theme preview">
+        <div class="mock">
+          <div class="mock-header">
+            <div class="mock-greeting">
+              <h2>Good afternoon</h2>
+              <div class="mock-date">Thursday, June 4, 2026</div>
+            </div>
+            <div class="mock-search">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.197 5.197a7.5 7.5 0 0 0 10.606 10.606Z" />
+              </svg>
+              <span>Search Google</span>
+              <button aria-label="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.25" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="quick-row">
+            <div class="shortcut">
+              <div class="shortcut-icon"><img src="https://www.google.com/s2/favicons?domain=google.com&sz=64" alt=""></div>
+              <span>Google</span>
+            </div>
+            <div class="shortcut">
+              <div class="shortcut-icon"><img src="https://www.google.com/s2/favicons?domain=github.com&sz=64" alt=""></div>
+              <span>GitHub</span>
+            </div>
+            <div class="shortcut add">
+              <div class="shortcut-icon">+</div>
+              <span>Add</span>
+            </div>
+          </div>
+
+          <div class="section-header">
+            <h3>Open tabs</h3>
+            <div class="section-line"></div>
+            <div class="section-count">3 domains · <button class="mini-btn">Close all 4 tabs</button></div>
+          </div>
+
+          <div class="cards">
+            <article class="tab-card">
+              <div class="card-top">
+                <span class="card-title">Homepages</span>
+                <span class="badge">1 tab open</span>
+              </div>
+              <div class="chip"><span class="favicon-dot"></span> YouTube</div>
+              <div class="action-row"><button class="mini-btn">Close all</button></div>
+            </article>
+            <article class="tab-card">
+              <div class="card-top">
+                <span class="card-title">GitHub</span>
+                <span class="badge">2 tabs open</span>
+              </div>
+              <div class="chip"><span class="favicon-dot"></span> Pull request</div>
+              <div class="action-row"><button class="mini-btn">Close all</button></div>
+            </article>
+            <article class="tab-card">
+              <div class="card-top">
+                <span class="card-title">Claude</span>
+                <span class="badge">1 tab open</span>
+              </div>
+              <div class="chip"><span class="favicon-dot"></span> New chat</div>
+              <div class="action-row"><button class="mini-btn">Close all</button></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side" id="themeList"></aside>
+    </div>
+  </main>
+
+  <script>
+    const themes = [
+      {
+        name: "Clear Dusk",
+        kind: "dark",
+        note: "Current-theme adjacent, but more transparent and less heavy. Good first candidate if you want minimal change.",
+        colors: {
+          pageBg: "#171a28",
+          pageInk: "#e7ebfb",
+          pageMuted: "#9ea8c0",
+          panelBg: "rgba(23, 26, 40, 0.58)",
+          panelLine: "rgba(151, 170, 216, 0.22)",
+          panelSoft: "rgba(255, 255, 255, 0.07)",
+          accentA: "#93b7ff",
+          accentB: "#8ee6d8",
+          accentC: "#f4b183",
+          danger: "#f38ba8",
+          shadow: "rgba(4, 8, 18, 0.24)"
+        }
+      },
+      {
+        name: "Aqua Night",
+        kind: "dark",
+        note: "Cooler and clearer. The cyan accent makes controls feel fresh without turning the whole page blue.",
+        colors: {
+          pageBg: "#101a22",
+          pageInk: "#e3f5f4",
+          pageMuted: "#91a9ad",
+          panelBg: "rgba(13, 26, 34, 0.54)",
+          panelLine: "rgba(134, 232, 222, 0.22)",
+          panelSoft: "rgba(210, 255, 250, 0.07)",
+          accentA: "#7ddfee",
+          accentB: "#a6e3a1",
+          accentC: "#f0b884",
+          danger: "#f08ea8",
+          shadow: "rgba(3, 13, 18, 0.24)"
+        }
+      },
+      {
+        name: "Graphite Mist",
+        kind: "dark",
+        note: "Neutral, professional, and low-saturation, with extra transparent glass panels for a cleaner surface.",
+        colors: {
+          pageBg: "#181a1f",
+          pageInk: "#eceff5",
+          pageMuted: "#a4aab7",
+          panelBg: "rgba(24, 26, 31, 0.42)",
+          panelLine: "rgba(192, 200, 216, 0.2)",
+          panelSoft: "rgba(255, 255, 255, 0.055)",
+          accentA: "#a8c7fa",
+          accentB: "#9ed7c8",
+          accentC: "#e7b47f",
+          danger: "#e88aa2",
+          shadow: "rgba(0, 0, 0, 0.22)"
+        }
+      },
+      {
+        name: "Violet Smoke",
+        kind: "dark",
+        note: "Softer and a little more expressive. Purple is an accent only, not the whole palette.",
+        colors: {
+          pageBg: "#1a1724",
+          pageInk: "#eee9fb",
+          pageMuted: "#a8a0bd",
+          panelBg: "rgba(26, 23, 36, 0.54)",
+          panelLine: "rgba(198, 177, 255, 0.2)",
+          panelSoft: "rgba(255, 255, 255, 0.065)",
+          accentA: "#b8a6ff",
+          accentB: "#8edfd2",
+          accentC: "#f0ad83",
+          danger: "#ee8fa8",
+          shadow: "rgba(9, 5, 18, 0.24)"
+        }
+      },
+      {
+        name: "Porcelain Sky",
+        kind: "light",
+        note: "Airy light mode with pale blue panels and restrained contrast. Very clean new-tab feel.",
+        colors: {
+          pageBg: "#edf4fb",
+          pageInk: "#1e2a3a",
+          pageMuted: "#66758c",
+          panelBg: "rgba(255, 255, 255, 0.62)",
+          panelLine: "rgba(82, 112, 154, 0.18)",
+          panelSoft: "rgba(255, 255, 255, 0.56)",
+          accentA: "#3f78d8",
+          accentB: "#0f9f8c",
+          accentC: "#b4663a",
+          danger: "#bd5870",
+          shadow: "rgba(48, 70, 102, 0.14)"
+        }
+      },
+      {
+        name: "Mint Glass",
+        kind: "light",
+        note: "Green-tinted but still balanced by blue and amber. Calm, fresh, and readable.",
+        colors: {
+          pageBg: "#eef7f4",
+          pageInk: "#1f302f",
+          pageMuted: "#627974",
+          panelBg: "rgba(255, 255, 255, 0.6)",
+          panelLine: "rgba(62, 128, 116, 0.18)",
+          panelSoft: "rgba(255, 255, 255, 0.58)",
+          accentA: "#497ed4",
+          accentB: "#1f9f89",
+          accentC: "#bb6d3d",
+          danger: "#bd5a72",
+          shadow: "rgba(46, 94, 86, 0.13)"
+        }
+      },
+      {
+        name: "Pearl Slate",
+        kind: "light",
+        note: "Most neutral light option. Slightly gray-blue, less bright, better for long daily use.",
+        colors: {
+          pageBg: "#eef1f6",
+          pageInk: "#222936",
+          pageMuted: "#697182",
+          panelBg: "rgba(255, 255, 255, 0.58)",
+          panelLine: "rgba(74, 87, 112, 0.16)",
+          panelSoft: "rgba(255, 255, 255, 0.54)",
+          accentA: "#507bd2",
+          accentB: "#239eaa",
+          accentC: "#b56d42",
+          danger: "#b95871",
+          shadow: "rgba(54, 64, 82, 0.13)"
+        }
+      },
+      {
+        name: "Morning Haze",
+        kind: "light",
+        note: "Warmest light option, but still not beige-heavy. Friendly without becoming a coffee palette.",
+        colors: {
+          pageBg: "#f3f4f0",
+          pageInk: "#282b2d",
+          pageMuted: "#747773",
+          panelBg: "rgba(255, 255, 255, 0.57)",
+          panelLine: "rgba(97, 105, 102, 0.16)",
+          panelSoft: "rgba(255, 255, 255, 0.52)",
+          accentA: "#4f7ed8",
+          accentB: "#219986",
+          accentC: "#c2723f",
+          danger: "#b95c73",
+          shadow: "rgba(80, 82, 76, 0.12)"
+        }
+      }
+    ];
+
+    const root = document.documentElement;
+    const list = document.getElementById("themeList");
+    const selectedName = document.getElementById("selectedName");
+    const selectedNote = document.getElementById("selectedNote");
+
+    function applyTheme(theme) {
+      root.style.setProperty("--page-bg", theme.colors.pageBg);
+      root.style.setProperty("--page-ink", theme.colors.pageInk);
+      root.style.setProperty("--page-muted", theme.colors.pageMuted);
+      root.style.setProperty("--panel-bg", theme.colors.panelBg);
+      root.style.setProperty("--panel-line", theme.colors.panelLine);
+      root.style.setProperty("--panel-soft", theme.colors.panelSoft);
+      root.style.setProperty("--accent-a", theme.colors.accentA);
+      root.style.setProperty("--accent-b", theme.colors.accentB);
+      root.style.setProperty("--accent-c", theme.colors.accentC);
+      root.style.setProperty("--danger", theme.colors.danger);
+      root.style.setProperty("--shadow", theme.colors.shadow);
+      selectedName.textContent = theme.name;
+      selectedNote.textContent = theme.note;
+      document.querySelectorAll(".theme-card").forEach((card) => {
+        card.classList.toggle("active", card.dataset.theme === theme.name);
+      });
+    }
+
+    function renderThemeCard(theme) {
+      const button = document.createElement("button");
+      button.className = "theme-card";
+      button.dataset.theme = theme.name;
+      button.innerHTML = `
+        <div class="theme-card-head">
+          <div class="theme-card-name">${theme.name}</div>
+          <div class="theme-kind">${theme.kind}</div>
+        </div>
+        <div class="swatches">
+          <span class="swatch" style="background:${theme.colors.pageBg}"></span>
+          <span class="swatch" style="background:${theme.colors.panelBg}"></span>
+          <span class="swatch" style="background:${theme.colors.accentA}"></span>
+          <span class="swatch" style="background:${theme.colors.accentB}"></span>
+          <span class="swatch" style="background:${theme.colors.accentC}"></span>
+        </div>
+        <p>${theme.note}</p>
+      `;
+      button.addEventListener("click", () => applyTheme(theme));
+      return button;
+    }
+
+    themes.forEach((theme) => list.appendChild(renderThemeCard(theme)));
+    applyTheme(themes[2]);
+  </script>
+</body>
+</html>
