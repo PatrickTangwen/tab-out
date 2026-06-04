@@ -224,28 +224,26 @@ header {
 .bookmark-icon {
   width: 54px;
   height: 54px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(168, 199, 250, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+  overflow: visible;
+  transition: transform 0.18s;
 }
 
 .bookmark-link:hover .bookmark-icon,
 .bookmark-add:hover .bookmark-icon {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(168, 199, 250, 0.42);
   transform: translateY(-1px);
 }
 
 .bookmark-icon img {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
 }
 
 .bookmark-fallback {
@@ -268,7 +266,6 @@ header {
 }
 
 .bookmark-add .bookmark-icon {
-  border-style: dashed;
   color: var(--accent-slate);
 }
 
