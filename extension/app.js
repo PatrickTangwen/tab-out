@@ -394,13 +394,50 @@ function friendlyDomainFromUrl(url) {
   }
 }
 
-function faviconUrlFromBookmark(url) {
+const BOOKMARK_ICON_OVERRIDES = {
+  'xiaohongshu.com': [
+    'https://picasso-static.xiaohongshu.com/fe-platform/f43dc4a8baf03678996c62d8db6ebc01a82256ff.png',
+    'https://www.xiaohongshu.com/favicon.ico',
+  ],
+  'www.xiaohongshu.com': [
+    'https://picasso-static.xiaohongshu.com/fe-platform/f43dc4a8baf03678996c62d8db6ebc01a82256ff.png',
+    'https://www.xiaohongshu.com/favicon.ico',
+  ],
+};
+
+function googleFaviconUrl(hostname, size = 64) {
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=${size}`;
+}
+
+function faviconUrlsFromBookmark(url) {
   try {
     const parsed = new URL(url);
-    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(parsed.hostname)}&sz=64`;
+    return [
+      ...(BOOKMARK_ICON_OVERRIDES[parsed.hostname] || []),
+      googleFaviconUrl(parsed.hostname, 64),
+    ];
   } catch {
-    return '';
+    return [];
   }
+}
+
+function handleBookmarkIconError(img) {
+  if (!img) return;
+
+  let fallbackUrls = [];
+  try {
+    fallbackUrls = JSON.parse(img.dataset.fallbackSrcs || '[]');
+  } catch {}
+
+  const nextUrl = fallbackUrls.shift();
+  if (nextUrl) {
+    img.dataset.fallbackSrcs = JSON.stringify(fallbackUrls);
+    img.src = nextUrl;
+    return;
+  }
+
+  img.style.display = 'none';
+  if (img.nextElementSibling) img.nextElementSibling.style.display = 'block';
 }
 
 function bookmarkInitial(title, url) {
@@ -422,14 +459,16 @@ function renderBookmarkTile(bookmark) {
   const safeId = escapeHtml(bookmark.id);
   const safeUrl = escapeHtml(bookmark.url);
   const safeTitle = escapeHtml(bookmark.title);
-  const faviconUrl = faviconUrlFromBookmark(bookmark.url);
+  const faviconUrls = faviconUrlsFromBookmark(bookmark.url);
+  const faviconUrl = faviconUrls[0] || '';
+  const fallbackFaviconUrls = escapeHtml(JSON.stringify(faviconUrls.slice(1)));
   const initial = escapeHtml(bookmarkInitial(bookmark.title, bookmark.url));
 
   return `
     <div class="bookmark-tile" data-bookmark-id="${safeId}">
       <a class="bookmark-link" href="${safeUrl}" target="_top" rel="noopener" title="${safeTitle}">
         <span class="bookmark-icon">
-          ${faviconUrl ? `<img src="${faviconUrl}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">` : ''}
+          ${faviconUrl ? `<img src="${escapeHtml(faviconUrl)}" data-fallback-srcs="${fallbackFaviconUrls}" alt="" onerror="handleBookmarkIconError(this)">` : ''}
           <span class="bookmark-fallback" style="${faviconUrl ? 'display:none' : ''}">${initial}</span>
         </span>
         <span class="bookmark-label">${safeTitle}</span>
