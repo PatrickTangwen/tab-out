@@ -324,6 +324,7 @@ async function dismissSavedTab(id) {
 
 const QUICK_BOOKMARKS_KEY = 'quickBookmarks';
 let quickBookmarks = [];
+let bookmarkManageMode = false;
 
 function hasChromeStorage() {
   return typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
@@ -508,6 +509,21 @@ async function renderQuickBookmarks() {
 
   quickBookmarks = await getQuickBookmarks();
   grid.innerHTML = quickBookmarks.map(renderBookmarkTile).join('') + renderAddBookmarkTile();
+  setBookmarkManageMode(bookmarkManageMode);
+}
+
+function setBookmarkManageMode(enabled) {
+  bookmarkManageMode = !!enabled;
+
+  const section = document.getElementById('bookmarksSection');
+  if (section) section.classList.toggle('bookmark-manage-mode', bookmarkManageMode);
+
+  const button = document.querySelector('[data-action="toggle-bookmark-settings"]');
+  if (button) {
+    button.setAttribute('aria-pressed', bookmarkManageMode ? 'true' : 'false');
+    button.setAttribute('title', bookmarkManageMode ? 'Done managing bookmarks' : 'Manage bookmarks');
+    button.setAttribute('aria-label', bookmarkManageMode ? 'Done managing bookmarks' : 'Manage bookmarks');
+  }
 }
 
 function openBookmarkDialog(bookmark = null) {
@@ -1496,6 +1512,11 @@ document.addEventListener('click', async (e) => {
   const action = actionEl.dataset.action;
 
   // ---- Quick bookmarks ----
+  if (action === 'toggle-bookmark-settings') {
+    setBookmarkManageMode(!bookmarkManageMode);
+    return;
+  }
+
   if (action === 'open-bookmark-dialog') {
     openBookmarkDialog();
     return;
@@ -1856,7 +1877,11 @@ if (bookmarkDialog) {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   const dialog = document.getElementById('bookmarkDialog');
-  if (dialog && !dialog.hidden) closeBookmarkDialog();
+  if (dialog && !dialog.hidden) {
+    closeBookmarkDialog();
+    return;
+  }
+  if (bookmarkManageMode) setBookmarkManageMode(false);
 });
 
 

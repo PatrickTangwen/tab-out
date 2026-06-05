@@ -188,6 +188,8 @@ header {
   margin-bottom: 16px;
   display: flex;
   align-items: flex-start;
+  position: relative;
+  padding-right: 34px;
 }
 
 body.dashboard-empty .bookmarks-section {
@@ -289,12 +291,6 @@ body.dashboard-empty .bookmarks-section {
   transition: opacity 0.15s;
 }
 
-.bookmark-tile:hover .bookmark-controls,
-.bookmark-tile:focus-within .bookmark-controls {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 .bookmark-control-btn {
   width: 22px;
   height: 22px;
@@ -323,6 +319,49 @@ body.dashboard-empty .bookmarks-section {
 .bookmark-control-btn svg {
   width: 12px;
   height: 12px;
+}
+
+.bookmarks-settings {
+  position: absolute;
+  top: 14px;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(168, 199, 250, 0.22);
+  border-radius: 50%;
+  background: rgba(24, 26, 31, 0.38);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.bookmarks-settings:hover,
+.bookmarks-settings:focus-visible,
+.bookmarks-settings[aria-pressed="true"] {
+  color: var(--accent-slate);
+  border-color: rgba(168, 199, 250, 0.48);
+  background: rgba(168, 199, 250, 0.1);
+}
+
+.bookmarks-settings:active {
+  transform: translateY(1px);
+}
+
+.bookmarks-settings svg {
+  width: 15px;
+  height: 15px;
+}
+
+.bookmarks-section.bookmark-manage-mode .bookmark-link {
+  pointer-events: none;
+}
+
+.bookmarks-section.bookmark-manage-mode .bookmark-controls {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* ---- Nudge banner ---- */
