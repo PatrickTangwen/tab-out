@@ -212,6 +212,19 @@ body.dashboard-empty .bookmarks-section {
   justify-content: center;
 }
 
+.bookmark-tile[data-bookmark-id] {
+  cursor: grab;
+}
+
+.bookmark-tile[data-bookmark-id]:active {
+  cursor: grabbing;
+}
+
+.bookmark-tile.dragging {
+  opacity: 0.45;
+  transform: scale(0.94);
+}
+
 .bookmark-link,
 .bookmark-add {
   width: 76px;

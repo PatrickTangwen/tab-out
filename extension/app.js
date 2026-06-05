@@ -325,6 +325,7 @@ async function dismissSavedTab(id) {
 const QUICK_BOOKMARKS_KEY = 'quickBookmarks';
 let quickBookmarks = [];
 let bookmarkManageMode = false;
+let draggedBookmarkId = '';
 
 function hasChromeStorage() {
   return typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
@@ -466,10 +467,10 @@ function renderBookmarkTile(bookmark) {
   const initial = escapeHtml(bookmarkInitial(bookmark.title, bookmark.url));
 
   return `
-    <div class="bookmark-tile" data-bookmark-id="${safeId}">
-      <a class="bookmark-link" href="${safeUrl}" target="_top" rel="noopener" title="${safeTitle}">
+    <div class="bookmark-tile" data-bookmark-id="${safeId}" draggable="true">
+      <a class="bookmark-link" href="${safeUrl}" target="_top" rel="noopener" draggable="false" title="${safeTitle}">
         <span class="bookmark-icon">
-          ${faviconUrl ? `<img src="${escapeHtml(faviconUrl)}" data-fallback-srcs="${fallbackFaviconUrls}" alt="" onerror="handleBookmarkIconError(this)">` : ''}
+          ${faviconUrl ? `<img src="${escapeHtml(faviconUrl)}" data-fallback-srcs="${fallbackFaviconUrls}" draggable="false" alt="" onerror="handleBookmarkIconError(this)">` : ''}
           <span class="bookmark-fallback" style="${faviconUrl ? 'display:none' : ''}">${initial}</span>
         </span>
         <span class="bookmark-label">${safeTitle}</span>
@@ -524,6 +525,49 @@ function setBookmarkManageMode(enabled) {
     button.setAttribute('title', bookmarkManageMode ? 'Done managing bookmarks' : 'Manage bookmarks');
     button.setAttribute('aria-label', bookmarkManageMode ? 'Done managing bookmarks' : 'Manage bookmarks');
   }
+}
+
+function getBookmarkDropReference(grid, x, y) {
+  const tiles = [...grid.querySelectorAll('.bookmark-tile[data-bookmark-id]:not(.dragging)')];
+  const addTile = grid.querySelector('.bookmark-tile:not([data-bookmark-id])');
+  const rowTiles = tiles.filter(tile => {
+    const rect = tile.getBoundingClientRect();
+    return y >= rect.top && y <= rect.bottom;
+  });
+
+  if (rowTiles.length > 0) {
+    for (const tile of rowTiles) {
+      const rect = tile.getBoundingClientRect();
+      if (x < rect.left + rect.width / 2) return tile;
+    }
+
+    const lastRowTile = rowTiles[rowTiles.length - 1];
+    return tiles[tiles.indexOf(lastRowTile) + 1] || addTile;
+  }
+
+  for (const tile of tiles) {
+    const rect = tile.getBoundingClientRect();
+    if (y < rect.top + rect.height / 2) return tile;
+  }
+
+  return addTile;
+}
+
+async function persistBookmarkOrderFromDom() {
+  const grid = document.getElementById('quickBookmarks');
+  if (!grid) return;
+
+  const orderedIds = [...grid.querySelectorAll('.bookmark-tile[data-bookmark-id]')]
+    .map(tile => tile.dataset.bookmarkId)
+    .filter(Boolean);
+  if (orderedIds.length !== quickBookmarks.length) return;
+
+  const byId = new Map(quickBookmarks.map(bookmark => [bookmark.id, bookmark]));
+  const next = orderedIds.map(id => byId.get(id)).filter(Boolean);
+  if (next.length !== quickBookmarks.length) return;
+
+  quickBookmarks = next;
+  await saveQuickBookmarks(quickBookmarks);
 }
 
 function openBookmarkDialog(bookmark = null) {
@@ -1882,6 +1926,57 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   if (bookmarkManageMode) setBookmarkManageMode(false);
+});
+
+document.addEventListener('dragstart', (e) => {
+  const tile = e.target.closest('.bookmark-tile[data-bookmark-id]');
+  if (!tile || e.target.closest('.bookmark-controls')) return;
+
+  draggedBookmarkId = tile.dataset.bookmarkId || '';
+  tile.classList.add('dragging');
+
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedBookmarkId);
+  }
+});
+
+document.addEventListener('dragover', (e) => {
+  if (!draggedBookmarkId) return;
+
+  const grid = e.target.closest('#quickBookmarks');
+  if (!grid) return;
+
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+
+  const draggingTile = [...grid.querySelectorAll('.bookmark-tile[data-bookmark-id]')]
+    .find(tile => tile.dataset.bookmarkId === draggedBookmarkId);
+  if (!draggingTile) return;
+
+  const reference = getBookmarkDropReference(grid, e.clientX, e.clientY);
+  if (reference && reference !== draggingTile) {
+    grid.insertBefore(draggingTile, reference);
+  }
+});
+
+document.addEventListener('drop', (e) => {
+  if (!draggedBookmarkId) return;
+  if (e.target.closest('#quickBookmarks')) e.preventDefault();
+});
+
+document.addEventListener('dragend', async () => {
+  if (!draggedBookmarkId) return;
+
+  document.querySelectorAll('.bookmark-tile.dragging').forEach(tile => tile.classList.remove('dragging'));
+  draggedBookmarkId = '';
+
+  try {
+    await persistBookmarkOrderFromDom();
+  } catch (err) {
+    console.error('[tab-out] Failed to save bookmark order:', err);
+    showToast('Failed to save bookmark order');
+  }
 });
 
 
