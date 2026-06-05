@@ -1011,6 +1011,14 @@ function updateOpenTabFooterStat() {
   if (statTabs) statTabs.textContent = visibleOpenTabCount(getRealTabs());
 }
 
+function updateDashboardEmptyClass() {
+  const openTabsSection = document.getElementById('openTabsSection');
+  const deferredColumn = document.getElementById('deferredColumn');
+  const hasOpenTabsSection = openTabsSection && openTabsSection.style.display !== 'none';
+  const hasDeferredColumn = deferredColumn && deferredColumn.style.display !== 'none';
+  document.body.classList.toggle('dashboard-empty', !hasOpenTabsSection && !hasDeferredColumn);
+}
+
 /* ----------------------------------------------------------------
    OVERFLOW CHIPS ("+N more" expand button in domain cards)
    ---------------------------------------------------------------- */
@@ -1240,6 +1248,8 @@ async function renderDeferredColumn() {
   } catch (err) {
     console.warn('[tab-out] Could not load saved tabs:', err);
     column.style.display = 'none';
+  } finally {
+    updateDashboardEmptyClass();
   }
 }
 

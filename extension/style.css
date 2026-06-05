@@ -190,6 +190,10 @@ header {
   align-items: flex-start;
 }
 
+body.dashboard-empty .bookmarks-section {
+  margin-bottom: 8px;
+}
+
 .bookmarks-grid {
   display: flex;
   align-items: flex-start;
@@ -929,6 +933,10 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+body.dashboard-empty footer {
+  margin-top: 20px;
 }
 
 .footer-stats {
