@@ -410,6 +410,13 @@ function chromeFaviconUrl(pageUrl, size = 16) {
   }
 }
 
+function faviconRequestSize(cssPixels) {
+  const pixelRatio = typeof window !== 'undefined' && Number.isFinite(window.devicePixelRatio)
+    ? Math.max(1, window.devicePixelRatio)
+    : 1;
+  return Math.max(1, Math.ceil(cssPixels * pixelRatio));
+}
+
 function siteFaviconUrl(pageUrl) {
   try {
     const parsed = new URL(pageUrl);
@@ -433,9 +440,9 @@ function pageOriginUrl(pageUrl) {
 function faviconUrlsForPage(pageUrl, size = 16, preferredUrl = '') {
   const originUrl = pageOriginUrl(pageUrl);
   return [
-    preferredUrl,
     chromeFaviconUrl(pageUrl, size),
     originUrl && originUrl !== pageUrl ? chromeFaviconUrl(originUrl, size) : '',
+    preferredUrl,
     siteFaviconUrl(pageUrl),
   ].filter((url, index, urls) => (
     url && urls.indexOf(url) === index
@@ -485,7 +492,7 @@ function renderBookmarkTile(bookmark) {
   const safeId = escapeHtml(bookmark.id);
   const safeUrl = escapeHtml(bookmark.url);
   const safeTitle = escapeHtml(bookmark.title);
-  const faviconUrls = faviconUrlsForPage(bookmark.url, 64);
+  const faviconUrls = faviconUrlsForPage(bookmark.url, faviconRequestSize(34));
   const faviconUrl = faviconUrls[0] || '';
   const fallbackFaviconUrls = escapeHtml(JSON.stringify(faviconUrls.slice(1)));
   const initial = escapeHtml(bookmarkInitial(bookmark.title, bookmark.url));
@@ -1119,8 +1126,8 @@ function buildOverflowChips(hiddenTabs, urlCounts = {}) {
     const safeUrl   = (tab.url || '').replace(/"/g, '&quot;');
     const safeTitle = label.replace(/"/g, '&quot;');
     const faviconUrls = isTabOut
-      ? ['icons/icon16.png']
-      : faviconUrlsForPage(tab.url, 16, tab.favIconUrl);
+      ? ['icons/icon.svg']
+      : faviconUrlsForPage(tab.url, faviconRequestSize(16), tab.favIconUrl);
     const faviconUrl = faviconUrls[0] || '';
     const fallbackFaviconUrls = escapeHtml(JSON.stringify(faviconUrls.slice(1)));
     const closeAction = isTabOut ? 'close-tabout-duplicates' : 'close-single-tab';
@@ -1210,8 +1217,8 @@ function renderDomainCard(group) {
     const safeUrl   = (tab.url || '').replace(/"/g, '&quot;');
     const safeTitle = label.replace(/"/g, '&quot;');
     const faviconUrls = tabIsTabOut
-      ? ['icons/icon16.png']
-      : faviconUrlsForPage(tab.url, 16, tab.favIconUrl);
+      ? ['icons/icon.svg']
+      : faviconUrlsForPage(tab.url, faviconRequestSize(16), tab.favIconUrl);
     const faviconUrl = faviconUrls[0] || '';
     const fallbackFaviconUrls = escapeHtml(JSON.stringify(faviconUrls.slice(1)));
     const closeAction = tabIsTabOut ? 'close-tabout-duplicates' : 'close-single-tab';
@@ -1342,7 +1349,9 @@ async function renderDeferredColumn() {
 function renderDeferredItem(item) {
   let domain = '';
   try { domain = new URL(item.url).hostname.replace(/^www\./, ''); } catch {}
-  const faviconUrl = chromeFaviconUrl(item.url, 16);
+  const faviconUrls = faviconUrlsForPage(item.url, faviconRequestSize(14));
+  const faviconUrl = faviconUrls[0] || '';
+  const fallbackFaviconUrls = escapeHtml(JSON.stringify(faviconUrls.slice(1)));
   const ago = timeAgo(item.savedAt);
 
   return `
@@ -1350,7 +1359,7 @@ function renderDeferredItem(item) {
       <input type="checkbox" class="deferred-checkbox" data-action="check-deferred" data-deferred-id="${item.id}">
       <div class="deferred-info">
         <a href="${item.url}" target="_blank" rel="noopener" class="deferred-title" title="${(item.title || '').replace(/"/g, '&quot;')}">
-          ${faviconUrl ? `<img src="${escapeHtml(faviconUrl)}" data-favicon alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px">` : ''}${item.title || item.url}
+          ${faviconUrl ? `<img src="${escapeHtml(faviconUrl)}" data-favicon data-fallback-srcs="${fallbackFaviconUrls}" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px">` : ''}${item.title || item.url}
         </a>
         <div class="deferred-meta">
           <span>${domain}</span>

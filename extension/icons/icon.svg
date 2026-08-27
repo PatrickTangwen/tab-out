@@ -1,14 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <!-- Rounded rectangle background in amber -->
-  <rect x="4" y="4" width="120" height="120" rx="24" ry="24" fill="#c8713a"/>
-  <!-- White "M" letter centered -->
-  <text
-    x="64"
-    y="90"
-    font-family="Georgia, serif"
-    font-size="80"
-    font-weight="bold"
-    fill="white"
-    text-anchor="middle"
-  >M</text>
+  <rect width="128" height="128" fill="#fff"/>
+
+  <!-- A vector master keeps the broom crisp at every display scale. -->
+  <g fill="#050505" stroke="#050505" stroke-linejoin="round">
+    <path d="M29 25a4 4 0 0 0-5.7 5.7l39.2 39.2 5.7-5.7z" stroke="none"/>
+    <path d="M58.5 62.5c4.6-4.6 10.7-5.4 14.7-1.4l5.7 5.7-17.1 17.1-5.7-5.7c-4-4-3.2-10.1 1.4-14.7z" stroke="none"/>
+
+    <path d="M65.5 78.1 58 99.8l10.2 4.7 4.4-22.7z" stroke="none"/>
+    <path d="m71.2 77.4-1 27.9 11.1-1.9-4.4-26.8z" stroke="none"/>
+    <path d="m76.2 74.8 7.1 26.3 9.8-5.5-11.2-23.7z" stroke="none"/>
+    <path d="m80.6 70.8 14.7 21.7 7.5-8.3-18.2-18z" stroke="none"/>
+  </g>
+
+  <path d="m61 81 20-20" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
 </svg>
