@@ -72,6 +72,8 @@ You open a new tab
 
 Everything runs inside the Chrome extension. There is no external server or account. Saved tabs and custom shortcuts are stored in `chrome.storage.local`; searches go to Google only when you submit the search form, and shortcut/tab favicons are loaded from Google's favicon service.
 
+> **Implementation update (August 26, 2026):** Favicons now prefer Chrome's built-in favicon data. Open tabs first use the favicon reported by `chrome.tabs`; shortcuts and saved tabs use the Manifest V3 `/_favicon/` endpoint, with each site's standard `/favicon.ico` as a direct fallback. The extension no longer depends on Google's favicon service.
+
 ---
 
 ## Tech stack

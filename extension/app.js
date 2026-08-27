@@ -35,12 +35,13 @@ async function fetchOpenTabs() {
   try {
     const tabs = await chrome.tabs.query({});
     openTabs = tabs.map(t => ({
-      id:       t.id,
-      url:      t.url,
-      title:    t.title,
-      windowId: t.windowId,
-      active:   t.active,
-      isTabOut: isTabOutUrl(t.url),
+      id:         t.id,
+      url:        t.url,
+      title:      t.title,
+      favIconUrl: t.favIconUrl || '',
+      windowId:   t.windowId,
+      active:     t.active,
+      isTabOut:   isTabOutUrl(t.url),
     }));
   } catch {
     // chrome.tabs API unavailable (shouldn't happen in an extension page)
@@ -396,35 +397,54 @@ function friendlyDomainFromUrl(url) {
   }
 }
 
-const BOOKMARK_ICON_OVERRIDES = {
-  'xiaohongshu.com': [
-    'https://picasso-static.xiaohongshu.com/fe-platform/f43dc4a8baf03678996c62d8db6ebc01a82256ff.png',
-    'https://www.xiaohongshu.com/favicon.ico',
-  ],
-  'www.xiaohongshu.com': [
-    'https://picasso-static.xiaohongshu.com/fe-platform/f43dc4a8baf03678996c62d8db6ebc01a82256ff.png',
-    'https://www.xiaohongshu.com/favicon.ico',
-  ],
-};
+function chromeFaviconUrl(pageUrl, size = 16) {
+  if (!pageUrl || typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.getURL) return '';
 
-function googleFaviconUrl(hostname, size = 64) {
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=${size}`;
-}
-
-function faviconUrlsFromBookmark(url) {
   try {
-    const parsed = new URL(url);
-    return [
-      ...(BOOKMARK_ICON_OVERRIDES[parsed.hostname] || []),
-      googleFaviconUrl(parsed.hostname, 64),
-    ];
+    const faviconUrl = new URL(chrome.runtime.getURL('/_favicon/'));
+    faviconUrl.searchParams.set('pageUrl', pageUrl);
+    faviconUrl.searchParams.set('size', String(size));
+    return faviconUrl.href;
   } catch {
-    return [];
+    return '';
   }
 }
 
-function handleBookmarkIconError(img) {
-  if (!img) return;
+function siteFaviconUrl(pageUrl) {
+  try {
+    const parsed = new URL(pageUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+    return `${parsed.origin}/favicon.ico`;
+  } catch {
+    return '';
+  }
+}
+
+function pageOriginUrl(pageUrl) {
+  try {
+    const parsed = new URL(pageUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+    return `${parsed.origin}/`;
+  } catch {
+    return '';
+  }
+}
+
+function faviconUrlsForPage(pageUrl, size = 16, preferredUrl = '') {
+  const originUrl = pageOriginUrl(pageUrl);
+  return [
+    preferredUrl,
+    chromeFaviconUrl(pageUrl, size),
+    originUrl && originUrl !== pageUrl ? chromeFaviconUrl(originUrl, size) : '',
+    siteFaviconUrl(pageUrl),
+  ].filter((url, index, urls) => (
+    url && urls.indexOf(url) === index
+  ));
+}
+
+function handleFaviconError(event) {
+  const img = event.target;
+  if (!img || img.tagName !== 'IMG' || !img.hasAttribute('data-favicon')) return;
 
   let fallbackUrls = [];
   try {
@@ -439,8 +459,12 @@ function handleBookmarkIconError(img) {
   }
 
   img.style.display = 'none';
-  if (img.nextElementSibling) img.nextElementSibling.style.display = 'block';
+  if (img.nextElementSibling && img.nextElementSibling.classList.contains('bookmark-fallback')) {
+    img.nextElementSibling.style.display = 'block';
+  }
 }
+
+document.addEventListener('error', handleFaviconError, true);
 
 function bookmarkInitial(title, url) {
   const source = (title || friendlyDomainFromUrl(url) || '?').trim();
@@ -461,7 +485,7 @@ function renderBookmarkTile(bookmark) {
   const safeId = escapeHtml(bookmark.id);
   const safeUrl = escapeHtml(bookmark.url);
   const safeTitle = escapeHtml(bookmark.title);
-  const faviconUrls = faviconUrlsFromBookmark(bookmark.url);
+  const faviconUrls = faviconUrlsForPage(bookmark.url, 64);
   const faviconUrl = faviconUrls[0] || '';
   const fallbackFaviconUrls = escapeHtml(JSON.stringify(faviconUrls.slice(1)));
   const initial = escapeHtml(bookmarkInitial(bookmark.title, bookmark.url));
@@ -470,7 +494,7 @@ function renderBookmarkTile(bookmark) {
     <div class="bookmark-tile" data-bookmark-id="${safeId}" draggable="true">
       <a class="bookmark-link" href="${safeUrl}" target="_top" rel="noopener" draggable="false" title="${safeTitle}">
         <span class="bookmark-icon">
-          ${faviconUrl ? `<img src="${escapeHtml(faviconUrl)}" data-fallback-srcs="${fallbackFaviconUrls}" draggable="false" alt="" onerror="handleBookmarkIconError(this)">` : ''}
+          ${faviconUrl ? `<img src="${escapeHtml(faviconUrl)}" data-favicon data-fallback-srcs="${fallbackFaviconUrls}" draggable="false" alt="">` : ''}
           <span class="bookmark-fallback" style="${faviconUrl ? 'display:none' : ''}">${initial}</span>
         </span>
         <span class="bookmark-label">${safeTitle}</span>
@@ -1094,20 +1118,18 @@ function buildOverflowChips(hiddenTabs, urlCounts = {}) {
     const chipClass = `${count > 1 ? ' chip-has-dupes' : ''}${isTabOut ? ' chip-tab-out' : ''}`;
     const safeUrl   = (tab.url || '').replace(/"/g, '&quot;');
     const safeTitle = label.replace(/"/g, '&quot;');
-    let domain = '';
-    try { domain = new URL(tab.url).hostname; } catch {}
-    const faviconUrl = isTabOut
-      ? 'icons/icon16.png'
-      : domain
-        ? `https://www.google.com/s2/favicons?domain=${domain}&sz=16`
-        : '';
+    const faviconUrls = isTabOut
+      ? ['icons/icon16.png']
+      : faviconUrlsForPage(tab.url, 16, tab.favIconUrl);
+    const faviconUrl = faviconUrls[0] || '';
+    const fallbackFaviconUrls = escapeHtml(JSON.stringify(faviconUrls.slice(1)));
     const closeAction = isTabOut ? 'close-tabout-duplicates' : 'close-single-tab';
     const saveAction = isTabOut ? '' : `
         <button class="chip-action chip-save" data-action="defer-single-tab" data-tab-url="${safeUrl}" data-tab-title="${safeTitle}" title="Save for later">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
         </button>`;
     return `<div class="page-chip clickable${chipClass}" data-action="focus-tab" data-tab-url="${safeUrl}" title="${safeTitle}">
-      ${faviconUrl ? `<img class="chip-favicon" src="${faviconUrl}" alt="" onerror="this.style.display='none'">` : ''}
+      ${faviconUrl ? `<img class="chip-favicon" src="${escapeHtml(faviconUrl)}" data-favicon data-fallback-srcs="${fallbackFaviconUrls}" alt="">` : ''}
       <span class="chip-text">${label}</span>${dupeTag}
       <div class="chip-actions">
         ${saveAction}
@@ -1187,20 +1209,18 @@ function renderDomainCard(group) {
     const chipClass = `${count > 1 ? ' chip-has-dupes' : ''}${tabIsTabOut ? ' chip-tab-out' : ''}`;
     const safeUrl   = (tab.url || '').replace(/"/g, '&quot;');
     const safeTitle = label.replace(/"/g, '&quot;');
-    let domain = '';
-    try { domain = new URL(tab.url).hostname; } catch {}
-    const faviconUrl = tabIsTabOut
-      ? 'icons/icon16.png'
-      : domain
-        ? `https://www.google.com/s2/favicons?domain=${domain}&sz=16`
-        : '';
+    const faviconUrls = tabIsTabOut
+      ? ['icons/icon16.png']
+      : faviconUrlsForPage(tab.url, 16, tab.favIconUrl);
+    const faviconUrl = faviconUrls[0] || '';
+    const fallbackFaviconUrls = escapeHtml(JSON.stringify(faviconUrls.slice(1)));
     const closeAction = tabIsTabOut ? 'close-tabout-duplicates' : 'close-single-tab';
     const saveAction = tabIsTabOut ? '' : `
         <button class="chip-action chip-save" data-action="defer-single-tab" data-tab-url="${safeUrl}" data-tab-title="${safeTitle}" title="Save for later">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
         </button>`;
     return `<div class="page-chip clickable${chipClass}" data-action="focus-tab" data-tab-url="${safeUrl}" title="${safeTitle}">
-      ${faviconUrl ? `<img class="chip-favicon" src="${faviconUrl}" alt="" onerror="this.style.display='none'">` : ''}
+      ${faviconUrl ? `<img class="chip-favicon" src="${escapeHtml(faviconUrl)}" data-favicon data-fallback-srcs="${fallbackFaviconUrls}" alt="">` : ''}
       <span class="chip-text">${label}</span>${dupeTag}
       <div class="chip-actions">
         ${saveAction}
@@ -1322,7 +1342,7 @@ async function renderDeferredColumn() {
 function renderDeferredItem(item) {
   let domain = '';
   try { domain = new URL(item.url).hostname.replace(/^www\./, ''); } catch {}
-  const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
+  const faviconUrl = chromeFaviconUrl(item.url, 16);
   const ago = timeAgo(item.savedAt);
 
   return `
@@ -1330,7 +1350,7 @@ function renderDeferredItem(item) {
       <input type="checkbox" class="deferred-checkbox" data-action="check-deferred" data-deferred-id="${item.id}">
       <div class="deferred-info">
         <a href="${item.url}" target="_blank" rel="noopener" class="deferred-title" title="${(item.title || '').replace(/"/g, '&quot;')}">
-          <img src="${faviconUrl}" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" onerror="this.style.display='none'">${item.title || item.url}
+          ${faviconUrl ? `<img src="${escapeHtml(faviconUrl)}" data-favicon alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px">` : ''}${item.title || item.url}
         </a>
         <div class="deferred-meta">
           <span>${domain}</span>
